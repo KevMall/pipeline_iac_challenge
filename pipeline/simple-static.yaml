@@ -1,0 +1,74 @@
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+resources:
+  repositories:
+  - repository: SimpleStaticRepo
+    type: github
+    endpoint: github.com_KevMall
+    name: pipeline_iac_challenge
+    ref: main
+
+trigger:
+  - main
+
+variables:
+  terraformVersion: 1.12.2
+  prefix: kev-simple-001
+
+steps:
+- checkout: SimpleStaticRepo
+
+- script: |
+      echo wget https://releases.hashicorp.com/terraform/${{ variables.terraformVersion }}/terraform_${{ variables.terraformVersion }}_linux_amd64.zip
+      echo unzip terraform_${{ variables.terraformVersion }}_linux_amd64.zip
+      echo sudo mv terraform /usr/local/bin/
+  displayName: "Install Terraform"
+
+- script: terraform init
+  displayName: Run Terraform Init
+  workingDirectory: "$(Build.SourcesDirectory)/iac"
+
+- script: terraform plan -var="prefix=$(prefix)"
+  displayName: Run Terraform Plan
+  workingDirectory: "$(Build.SourcesDirectory)/iac"
+
+- task: ManualValidation@1
+  displayName: "Wait for review of Terraform Plan"
+  inputs:
+    instructions: "Ensure that the Plan only contains expected output"
+    onTimeout: "reject"
+
+# Don't prevision the resources
+- script: echo terraform apply -var="prefix=$(prefix)"
+  displayName: Run Terraform Apply
+  workingDirectory: "$(Build.SourcesDirectory)/iac"
+
+- task: AzureCLI@2
+  displayName: "Check that the Azure Web App has been created"
+  inputs:
+    azureSubscription: SimpleStaticSub
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo az login
+      echo WEB_APP_STATE=$(az webapp show $(prefix)-webapp --query "state" --output tsv)
+      echo echo "Web App State: $WEB_APP_STATE"
+
+      echo if [ "$WEB_APP_STATE" != "Running" ]; then
+      echo   echo "ERROR: Web App is not running!"
+      echo   exit 1
+      echo fi
+
+- task: AzureCLI@2
+  displayName: "Deploy the web page to the Web App Service"
+  inputs:
+    condition: succeeded()
+    azureSubscription: SimpleStaticSub
+    scriptType: bash
+    scriptLocation: inlineScript
+    workingDirectory: "$(Build.SourcesDirectory)/web-app
+    inlineScript: |
+      az login
+      echo az webapp deployment source --name $(prefix)-webapE --src index.html
