@@ -21,19 +21,3 @@ If it was know that the web app would remain static and public, then Azure Stati
 # Web Page
 Currently this is a simple static `index.html` page displaying the title.
 of the 
-
-meets the following deliverbales:
-1. Simple Webpage Optional): A basic index.html file (or similar) that your defined server 
-would serve. 
-2. IaC Configuration AWS or Azure): All necessary files for your chosen IaC tool to define 
-the infrastructure on your chosen cloud. Include a README.md explaining your 
-resource choices, the cloud platform you selected, the IaC tool you used, and the 
-commands that would be used for deployment. 
-3. CI/CD Pipeline Definition: The YAML or JSON definition of your chosen CI/CD pipeline. 
-Include a README.md explaining the pipeline stages and the commands or steps that 
-would be executed in a real deployment scenario. 
-4. Brief Documentation: A short document (e.g., design.md) outlining: 
-○ The chosen cloud platform and the infrastructure components you defined, and 
-the rationale behind these choices. 
-○ A brief explanation of the CI/CD pipeline and how it would function for 
-deployment. 
